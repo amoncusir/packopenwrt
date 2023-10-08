@@ -1,0 +1,54 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+
+START=90
+STOP=90
+APP=logtrigger
+
+LOGTRIGGER_BIN=/usr/sbin/logtrigger
+LOGTRIGGER_PID=/var/run/logtrigger.pid
+LOGTRIGGER_CONF=/etc/config/logtrigger
+
+match_format() {
+  local section="$1"
+
+  config_get type "$section" type
+  config_get match "$section" match
+  config_get scriptpath "$section" scriptpath
+
+  echo -t "${type}" "${match}" "${scriptpath}"
+}
+
+start_service() {
+
+## Variable definition
+  local socket_path
+
+## Load UCI configuration
+	config_load 'logtrigger'
+
+#	config_foreach
+
+	config_get socket_path socket
+
+## Open procd instance
+  procd_open_instance ${APP}
+
+  procd_set_param respawn
+  procd_set_param file ${LOGTRIGGER_CONF}
+  procd_set_param pidfile ${LOGTRIGGER_PID}
+  procd_set_param stdout 0 # IMPORTANT: Disable log redirect to avoid infinite recursion
+  procd_set_param stderr 0 # same for stderr
+
+## Set initial command
+  procd_set_param command ${LOGTRIGGER_BIN}
+
+  if [ -n "${socket_path}" ]; then
+    procd_append_param command -s "${socket_path}"
+  fi
+
+  procd_append_param command $(config_foreach match_format 'logtrigger-match')
+
+  procd_close_instance
+}
