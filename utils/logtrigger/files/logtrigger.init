@@ -28,8 +28,6 @@ start_service() {
 ## Load UCI configuration
 	config_load 'logtrigger'
 
-#	config_foreach
-
 	config_get socket_path socket
 
 ## Open procd instance
