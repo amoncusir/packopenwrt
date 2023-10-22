@@ -16,8 +16,9 @@ match_format() {
   config_get type "$section" type
   config_get match "$section" match
   config_get scriptpath "$section" scriptpath
+  config_get flags "$section" flags
 
-  echo -t "${type}" "${match}" "${scriptpath}"
+  echo -t "${type}" "${match}" "${scriptpath}" ${flags}
 }
 
 start_service() {
